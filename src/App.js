@@ -12,9 +12,11 @@ import BeatLoader from "react-spinners/BeatLoader";
 import {
   getNeoContract,
   getWmaticContract,
-  getPrice,
-  runSwap,
+  getPriceNeoToMatic,
+  runSwapNeoToMatic,
   getPoolContract,
+  getPriceMaticToNeo,
+  runSwapMaticToNeo,
 } from "./AlphaRouterService";
 
 function App() {
@@ -79,11 +81,29 @@ function App() {
     getWalletAddress();
   }
 
-  const getSwapPrice = (inputAmount) => {
+  const getSwapPriceNeoToMatic = (inputAmount) => {
     setLoading(true);
     setInputAmount(inputAmount);
 
-    const swap = getPrice(
+    const swap = getPriceNeoToMatic(
+      inputAmount,
+      slippageAmount,
+      Math.floor(Date.now() / 1000 + deadlineMinutes * 60),
+      signerAddress
+    ).then((data) => {
+      setTransaction(data[0]);
+      setOutputAmount(data[1]);
+      setRatio(data[2]);
+      setLoading(false);
+    });
+  };
+
+  const getSwapPriceMaticToNeo = (inputAmount) => {
+    setLoading(true);
+    setInputAmount(inputAmount);
+    console.log(inputAmount);
+
+    const swap = getPriceMaticToNeo(
       inputAmount,
       slippageAmount,
       Math.floor(Date.now() / 1000 + deadlineMinutes * 60),
@@ -157,7 +177,7 @@ function App() {
                 <CurrencyField
                   field="input"
                   tokenName="NEO"
-                  getSwapPrice={getSwapPrice}
+                  getSwapPrice={getSwapPriceNeoToMatic}
                   signer={signer}
                   balance={neoAmount}
                 />
@@ -178,19 +198,19 @@ function App() {
             </>
           ) : (
             <>
-              {/* {" "}
+              {" "}
               <div className="swapBody">
                 <CurrencyField
                   field="input"
                   tokenName="WMATIC"
-                  getSwapPrice={getSwapPrice}
+                  getSwapPrice={getSwapPriceMaticToNeo}
                   signer={signer}
                   balance={wmaticAmount}
                 />
                 <CurrencyField
                   field="output"
                   tokenName="NEO"
-                  value={1 / outputAmount}
+                  value={outputAmount}
                   signer={signer}
                   balance={neoAmount}
                   spinner={BeatLoader}
@@ -199,7 +219,7 @@ function App() {
               </div>
               <div className="ratioContainer">
                 {ratio && <>{`1 NEO = ${1 / ratio} WMATIC`}</>}
-              </div> */}
+              </div>
             </>
           )}
 
@@ -211,14 +231,14 @@ function App() {
                 >
                   <div
                     style={{ width: "45%" }}
-                    onClick={() => runSwap(transaction, signer)}
+                    onClick={() => runSwapNeoToMatic(transaction, signer)}
                     className="swapButton"
                   >
                     Neo to Matic
                   </div>
                   <div
                     style={{ width: "45%" }}
-                    onClick={() => runSwap(transaction, signer)}
+                    onClick={() => runSwapMaticToNeo(transaction, signer)}
                     className="swapButton"
                   >
                     Matic To Neo

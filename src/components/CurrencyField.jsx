@@ -16,7 +16,7 @@ const CurrencyField = (props) => {
           <input
             className="currencyInputField"
             placeholder="0.0"
-            value={props.value}
+            defaultValue={props.value}
             onBlur={(e) =>
               props.field === "input" ? getPrice(e.target.value) : null
             }

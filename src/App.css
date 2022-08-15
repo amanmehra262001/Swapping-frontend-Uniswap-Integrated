@@ -1,6 +1,6 @@
 .App {
     text-align: center;
-    background-color: #e3eef3;
+    background-color: #f3e3f2;
     min-height: 100vh;
 }
 
@@ -73,7 +73,7 @@ body {
 }
 
 .swapContainer {
-    background-color: rgb(203, 231, 240);
+    background-color: rgb(240, 203, 238);
     width: 440px;
     height: 350px;
     margin: 0 auto;
@@ -112,7 +112,7 @@ body {
 }
 
 .currencyInput:hover {
-    border-color: #65cdee !important;
+    border-color: #ee65c0 !important;
     border: 1px solid;
 }
 

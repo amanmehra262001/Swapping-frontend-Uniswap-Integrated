@@ -41,7 +41,9 @@ export const getWmaticContract = () =>
 export const getPoolContract = () =>
     new ethers.Contract(poolAddress, UniswapV3Pool, web3Provider);
 
-export const getPrice = async(
+// _____________________________NEO->MATIC________________________________________
+
+export const getPriceNeoToMatic = async(
     inputAmount,
     slippageAmount,
     deadline,
@@ -82,10 +84,59 @@ export const getPrice = async(
     return [transaction, quoteAmountOut, ratio];
 };
 
-export const runSwap = async(transaction, signer) => {
+export const runSwapNeoToMatic = async(transaction, signer) => {
     const approvalAmount = ethers.utils.parseUnits("10", 18).toString();
     const neoTokenContract = getNeoContract();
     await neoTokenContract
+        .connect(signer)
+        .approve(V3_SWAP_ROUTER_ADDRESS, approvalAmount);
+
+    signer.sendTransaction(transaction);
+};
+
+// _____________________________MATIC->NEO________________________________________
+
+export const getPriceMaticToNeo = async(
+    inputAmount,
+    slippageAmount,
+    deadline,
+    walletAddress
+) => {
+    const percentSlippage = new Percent(slippageAmount, 100);
+    const wmaticDecimals = ethers.utils.parseUnits(
+        inputAmount.toString(),
+        decimals1
+    );
+    const currencyAmount = CurrencyAmount.fromRawAmount(
+        WMATIC,
+        JSBI.BigInt(wmaticDecimals)
+    );
+
+    const route = await router.route(currencyAmount, NEO, TradeType.EXACT_INPUT, {
+        recipient: walletAddress,
+        slippageTolerance: percentSlippage,
+        deadline: deadline,
+    });
+
+    const transaction = {
+        data: route.methodParameters.calldata,
+        to: V3_SWAP_ROUTER_ADDRESS,
+        value: BigNumber.from(route.methodParameters.value),
+        from: walletAddress,
+        gasPrice: BigNumber.from(route.gasPriceWei),
+        gasLimit: ethers.utils.hexlify(1000000),
+    };
+
+    const quoteAmountOut = route.quote.toFixed(6);
+    const ratio = (inputAmount / quoteAmountOut).toFixed(3);
+
+    return [transaction, quoteAmountOut, ratio];
+};
+
+export const runSwapMaticToNeo = async(transaction, signer) => {
+    const approvalAmount = ethers.utils.parseUnits("10", 18).toString();
+    const wmaticTokenContract = getWmaticContract();
+    await wmaticTokenContract
         .connect(signer)
         .approve(V3_SWAP_ROUTER_ADDRESS, approvalAmount);
 
