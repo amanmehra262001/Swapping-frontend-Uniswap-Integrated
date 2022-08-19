@@ -13,7 +13,9 @@ import {
   getNeoContract,
   getWmaticContract,
   getPriceNeoToMatic,
-  runSwapNeoToMatic,
+  runSwapNeoToWMatic,
+  unwrapWmatic,
+  wrapMatic,
   getPoolContract,
   getPriceMaticToNeo,
   runSwapMaticToNeo,
@@ -39,6 +41,7 @@ function App() {
   const [neoAmount, setNeoAmount] = useState(undefined);
   const [wmaticAmount, setWmaticAmount] = useState(undefined);
   const [transactionDirection, setTransactionDirection] = useState(true);
+  const [approvalAmount, setApprovalAmount] = useState("0");
 
   useEffect(() => {
     const onLoad = async () => {
@@ -67,7 +70,6 @@ function App() {
     signer.getAddress().then((address) => {
       setSignerAddress(address);
 
-      // todo: connect neo and wmatic contracts
       neoContract.balanceOf(address).then((res) => {
         setNeoAmount(Number(ethers.utils.formatEther(res)));
       });
@@ -94,24 +96,26 @@ function App() {
       setTransaction(data[0]);
       setOutputAmount(data[1]);
       setRatio(data[2]);
+      setApprovalAmount(data[3]);
       setLoading(false);
     });
   };
 
-  const getSwapPriceMaticToNeo = (inputAmount) => {
+  const getSwapPriceMaticToNeo = (inputAmount, signer) => {
     setLoading(true);
     setInputAmount(inputAmount);
-    console.log(inputAmount);
 
     const swap = getPriceMaticToNeo(
       inputAmount,
       slippageAmount,
       Math.floor(Date.now() / 1000 + deadlineMinutes * 60),
-      signerAddress
+      signerAddress,
+      signer
     ).then((data) => {
       setTransaction(data[0]);
       setOutputAmount(data[1]);
       setRatio(data[2]);
+      setApprovalAmount(data[3]);
       setLoading(false);
     });
   };
@@ -231,17 +235,40 @@ function App() {
                 >
                   <div
                     style={{ width: "45%" }}
-                    onClick={() => runSwapNeoToMatic(transaction, signer)}
+                    onClick={() =>
+                      runSwapNeoToWMatic(
+                        transaction,
+                        signer,
+                        approvalAmount,
+                        wmaticAmount
+                      )
+                    }
                     className="swapButton"
                   >
-                    Neo to Matic
+                    N-M
                   </div>
                   <div
                     style={{ width: "45%" }}
-                    onClick={() => runSwapMaticToNeo(transaction, signer)}
+                    onClick={() => unwrapWmatic(signer)}
                     className="swapButton"
                   >
-                    Matic To Neo
+                    Unwrap
+                  </div>
+                  <div
+                    style={{ width: "45%" }}
+                    onClick={() => wrapMatic(provider, signer)}
+                    className="swapButton"
+                  >
+                    Wrap
+                  </div>
+                  <div
+                    style={{ width: "45%" }}
+                    onClick={() =>
+                      runSwapMaticToNeo(transaction, signer, approvalAmount)
+                    }
+                    className="swapButton"
+                  >
+                    M-N
                   </div>
                 </div>
               ) : (
